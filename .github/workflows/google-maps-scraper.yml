@@ -7,7 +7,8 @@ on:
         description: "One Google Maps search per line"
         required: true
         default: |-
-          real estate agent Portland OR
+          real estate agent Idaho
+          real estate agent South Carolina
           bookkeeping service Portland OR
       depth:
         description: "Results depth per query (1 is a controlled first pass)"
