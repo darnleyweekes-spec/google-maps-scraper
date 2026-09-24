@@ -4,17 +4,21 @@ on:
   workflow_dispatch:
     inputs:
       idaho_query:
-        description: "Idaho real-estate query"
+        description: "Primary Idaho real-estate query"
         required: true
-        default: "real estate agent Idaho"
+        default: "real estate agent Boise Idaho"
       south_carolina_query:
-        description: "South Carolina real-estate query"
+        description: "Primary South Carolina real-estate query"
         required: true
-        default: "real estate agent South Carolina"
+        default: "real estate agent Charleston South Carolina"
       additional_queries:
-        description: "Optional extra searches, one per line"
-        required: false
-        default: ""
+        description: "Additional metro searches, one per line"
+        required: true
+        default: |-
+          real estate agent Meridian Idaho
+          real estate agent Coeur d'Alene Idaho
+          real estate agent Greenville South Carolina
+          real estate agent Columbia South Carolina
       depth:
         description: "Results depth per query (1 is a controlled first pass)"
         required: true
@@ -43,9 +47,7 @@ jobs:
           {
             printf '%s\n' "$IDAHO_QUERY"
             printf '%s\n' "$SOUTH_CAROLINA_QUERY"
-            if [ -n "$ADDITIONAL_QUERIES" ]; then
-              printf '%s\n' "$ADDITIONAL_QUERIES"
-            fi
+            printf '%s\n' "$ADDITIONAL_QUERIES"
           } > queries.txt
           sed -n '=' queries.txt
           mkdir -p out
