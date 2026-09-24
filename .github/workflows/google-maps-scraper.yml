@@ -1,0 +1,63 @@
+name: Google Maps prospect scraper
+
+on:
+  workflow_dispatch:
+    inputs:
+      queries:
+        description: "One Google Maps search per line"
+        required: true
+        default: |-
+          real estate agent Portland OR
+          bookkeeping service Portland OR
+      depth:
+        description: "Results depth per query (1 is a controlled first pass)"
+        required: true
+        default: "1"
+      include_emails:
+        description: "Visit listed websites to collect publicly posted business emails"
+        type: boolean
+        required: true
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  scrape:
+    name: Build prospect CSV
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Write query file
+        env:
+          QUERIES: ${{ inputs.queries }}
+        run: |
+          printf '%s\n' "$QUERIES" > queries.txt
+          mkdir -p out
+
+      - name: Run Google Maps Scraper
+        env:
+          DEPTH: ${{ inputs.depth }}
+          INCLUDE_EMAILS: ${{ inputs.include_emails }}
+        run: |
+          args=(
+            -input /queries.txt
+            -results /out/results.csv
+            -depth "$DEPTH"
+            -exit-on-inactivity 3m
+          )
+          if [ "$INCLUDE_EMAILS" = "true" ]; then
+            args+=(-email)
+          fi
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE/queries.txt:/queries.txt:ro" \
+            -v "$GITHUB_WORKSPACE/out:/out" \
+            gosom/google-maps-scraper "${args[@]}"
+
+      - name: Publish CSV
+        uses: actions/upload-artifact@v4
+        with:
+          name: google-maps-prospects
+          path: out/results.csv
+          if-no-files-found: error
+          retention-days: 14
