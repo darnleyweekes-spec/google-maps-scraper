@@ -3,13 +3,18 @@ name: Google Maps prospect scraper
 on:
   workflow_dispatch:
     inputs:
-      queries:
-        description: "One Google Maps search per line"
+      idaho_query:
+        description: "Idaho real-estate query"
         required: true
-        default: |-
-          real estate agent Idaho
-          real estate agent South Carolina
-          bookkeeping service Portland OR
+        default: "real estate agent Idaho"
+      south_carolina_query:
+        description: "South Carolina real-estate query"
+        required: true
+        default: "real estate agent South Carolina"
+      additional_queries:
+        description: "Optional extra searches, one per line"
+        required: false
+        default: ""
       depth:
         description: "Results depth per query (1 is a controlled first pass)"
         required: true
@@ -31,9 +36,18 @@ jobs:
     steps:
       - name: Write query file
         env:
-          QUERIES: ${{ inputs.queries }}
+          IDAHO_QUERY: ${{ inputs.idaho_query }}
+          SOUTH_CAROLINA_QUERY: ${{ inputs.south_carolina_query }}
+          ADDITIONAL_QUERIES: ${{ inputs.additional_queries }}
         run: |
-          printf '%s\n' "$QUERIES" > queries.txt
+          {
+            printf '%s\n' "$IDAHO_QUERY"
+            printf '%s\n' "$SOUTH_CAROLINA_QUERY"
+            if [ -n "$ADDITIONAL_QUERIES" ]; then
+              printf '%s\n' "$ADDITIONAL_QUERIES"
+            fi
+          } > queries.txt
+          sed -n '=' queries.txt
           mkdir -p out
 
       - name: Run Google Maps Scraper
