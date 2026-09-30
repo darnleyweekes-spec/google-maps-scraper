@@ -12,15 +12,9 @@ on:
         required: true
         default: "mobile car detailing WhatsApp booking Houston Texas"
       additional_queries:
-        description: "Additional nationwide metro searches, one per line"
+        description: "Additional nationwide metro searches separated by |"
         required: true
-        default: |-
-          catering WhatsApp Seattle Washington
-          mobile car detailing WhatsApp Los Angeles California
-          event catering WhatsApp Chicago Illinois
-          private chef WhatsApp Dallas Texas
-          bakery WhatsApp order Atlanta Georgia
-          mobile car detailing WhatsApp Denver Colorado
+        default: "catering WhatsApp Seattle Washington|mobile car detailing WhatsApp Los Angeles California|event catering WhatsApp Chicago Illinois|private chef WhatsApp Dallas Texas|bakery WhatsApp order Atlanta Georgia|mobile car detailing WhatsApp Denver Colorado"
       depth:
         description: "Results depth per query (1 is a controlled first pass)"
         required: true
@@ -42,15 +36,17 @@ jobs:
     steps:
       - name: Write query file
         env:
-          IDAHO_QUERY: ${{ inputs.idaho_query }}
-          SOUTH_CAROLINA_QUERY: ${{ inputs.south_carolina_query }}
+          PRIMARY_QUERY: ${{ inputs.idaho_query }}
+          SECONDARY_QUERY: ${{ inputs.south_carolina_query }}
           ADDITIONAL_QUERIES: ${{ inputs.additional_queries }}
         run: |
           {
-            printf '%s\n' "$IDAHO_QUERY"
-            printf '%s\n' "$SOUTH_CAROLINA_QUERY"
-            printf '%s\n' "$ADDITIONAL_QUERIES"
+            printf '%s\n' "$PRIMARY_QUERY"
+            printf '%s\n' "$SECONDARY_QUERY"
+            printf '%s' "$ADDITIONAL_QUERIES" | tr '|' '\n'
+            printf '\n'
           } > queries.txt
+          echo "Query count: $(wc -l < queries.txt)"
           sed -n '=' queries.txt
           mkdir -p out
 
