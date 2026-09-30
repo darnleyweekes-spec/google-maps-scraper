@@ -4,21 +4,23 @@ on:
   workflow_dispatch:
     inputs:
       idaho_query:
-        description: "Primary Idaho real-estate query"
+        description: "Primary nationwide business query"
         required: true
-        default: "real estate agent Boise Idaho"
+        default: "catering service WhatsApp orders Miami Florida"
       south_carolina_query:
-        description: "Primary South Carolina real-estate query"
+        description: "Second nationwide business query"
         required: true
-        default: "real estate agent Charleston South Carolina"
+        default: "mobile car detailing WhatsApp booking Houston Texas"
       additional_queries:
-        description: "Additional metro searches, one per line"
+        description: "Additional nationwide metro searches, one per line"
         required: true
         default: |-
-          real estate agent Meridian Idaho
-          real estate agent Coeur d'Alene Idaho
-          real estate agent Greenville South Carolina
-          real estate agent Columbia South Carolina
+          catering WhatsApp Seattle Washington
+          mobile car detailing WhatsApp Los Angeles California
+          event catering WhatsApp Chicago Illinois
+          private chef WhatsApp Dallas Texas
+          bakery WhatsApp order Atlanta Georgia
+          mobile car detailing WhatsApp Denver Colorado
       depth:
         description: "Results depth per query (1 is a controlled first pass)"
         required: true
