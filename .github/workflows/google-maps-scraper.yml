@@ -41,10 +41,10 @@ jobs:
           ADDITIONAL_QUERIES: ${{ inputs.additional_queries }}
         run: |
           {
-            printf '%s\\n' "$PRIMARY_QUERY"
-            printf '%s\\n' "$SECONDARY_QUERY"
-            printf '%s' "$ADDITIONAL_QUERIES" | tr '|' '\\n'
-            printf '\\n'
+            printf '%s\n' "$PRIMARY_QUERY"
+            printf '%s\n' "$SECONDARY_QUERY"
+            printf '%s' "$ADDITIONAL_QUERIES" | tr '|' '\n'
+            printf '\n'
           } > queries.txt
           echo "Query count: $(wc -l < queries.txt)"
           sed -n '=' queries.txt
@@ -64,9 +64,9 @@ jobs:
           if [ "$INCLUDE_EMAILS" = "true" ]; then
             args+=(-email)
           fi
-          docker run --rm \\
-            -v "$GITHUB_WORKSPACE/queries.txt:/queries.txt:ro" \\
-            -v "$GITHUB_WORKSPACE/out:/out" \\
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE/queries.txt:/queries.txt:ro" \
+            -v "$GITHUB_WORKSPACE/out:/out" \
             gosom/google-maps-scraper "${args[@]}"
 
       - name: Publish CSV
