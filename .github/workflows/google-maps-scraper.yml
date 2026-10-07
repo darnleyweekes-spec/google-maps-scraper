@@ -1,78 +1,89 @@
-name: Google Maps prospect scraper
+name: Google Maps worldwide native scraper
 
 on:
+  push:
+    paths:
+      - alpha/worldwide.py
+      - .github/workflows/google-maps-scraper.yml
   workflow_dispatch:
     inputs:
-      idaho_query:
-        description: "Primary West Coast business query"
-        required: true
-        default: "mobile car detailing WhatsApp booking Seattle Washington"
-      south_carolina_query:
-        description: "Second West Coast business query"
-        required: true
-        default: "mobile car detailing WhatsApp booking Portland Oregon"
-      additional_queries:
-        description: "Additional West Coast metro searches separated by |"
-        required: true
-        default: "catering WhatsApp orders San Francisco California|event catering WhatsApp booking Los Angeles California"
+      region:
+        description: Region or worldwide
+        type: choice
+        options: [worldwide, north-america, south-america, europe, africa, asia, oceania]
+        default: worldwide
+      offset:
+        description: Query offset for the next batch
+        default: '0'
+      query_limit:
+        description: Queries per project (1 to 30)
+        default: '6'
       depth:
-        description: "Results depth per query (1 is a controlled first pass)"
-        required: true
-        default: "1"
+        description: Result depth (1 to 3)
+        default: '1'
       include_emails:
-        description: "Visit listed websites to collect publicly posted business emails"
+        description: Read publicly listed business emails
         type: boolean
-        required: true
         default: true
 
 permissions:
   contents: read
+concurrency:
+  group: worldwide-prospects
+  cancel-in-progress: false
 
 jobs:
   scrape:
-    name: Build prospect CSV
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        project: [prime24ai, agents, mediamatch]
     steps:
-      - name: Write query file
-        env:
-          PRIMARY_QUERY: ${{ inputs.idaho_query }}
-          SECONDARY_QUERY: ${{ inputs.south_carolina_query }}
-          ADDITIONAL_QUERIES: ${{ inputs.additional_queries }}
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Build native scraper
+        run: go build -o google-maps-scraper .
+      - name: Install matching browser
         run: |
-          {
-            printf '%s\n' "$PRIMARY_QUERY"
-            printf '%s\n' "$SECONDARY_QUERY"
-            printf '%s' "$ADDITIONAL_QUERIES" | tr '|' '\n'
-            printf '\n'
-          } > queries.txt
-          echo "Query count: $(wc -l < queries.txt)"
-          sed -n '=' queries.txt
+          playwright_version=$(go list -m -f '{{.Version}}' github.com/mxschmitt/playwright-go)
+          go run "github.com/mxschmitt/playwright-go/cmd/playwright@$playwright_version" install --with-deps chromium
+      - name: Create bounded worldwide query batch
+        env:
+          PROJECT: ${{ matrix.project }}
+          REGION: ${{ inputs.region || 'worldwide' }}
+          OFFSET: ${{ inputs.offset || '0' }}
+          QUERY_LIMIT: ${{ inputs.query_limit || '6' }}
+        run: |
           mkdir -p out
-
-      - name: Run Google Maps Scraper
+          python3 alpha/worldwide.py --project "$PROJECT" --region "$REGION" --offset "$OFFSET" --limit "$QUERY_LIMIT" --output out/queries.txt
+      - name: Run native scraper
         env:
-          DEPTH: ${{ inputs.depth }}
-          INCLUDE_EMAILS: ${{ inputs.include_emails }}
+          DEPTH: ${{ inputs.depth || '1' }}
+          INCLUDE_EMAILS: ${{ github.event_name == 'push' || inputs.include_emails }}
         run: |
-          args=(
-            -input /queries.txt
-            -results /out/results.csv
-            -depth "$DEPTH"
-            -exit-on-inactivity 3m
-          )
-          if [ "$INCLUDE_EMAILS" = "true" ]; then
-            args+=(-email)
-          fi
-          docker run --rm \
-            -v "$GITHUB_WORKSPACE/queries.txt:/queries.txt:ro" \
-            -v "$GITHUB_WORKSPACE/out:/out" \
-            gosom/google-maps-scraper "${args[@]}"
-
-      - name: Publish CSV
+          [[ "$DEPTH" =~ ^[1-3]$ ]] || { echo 'Depth must be 1..3'; exit 1; }
+          args=(-input out/queries.txt -results out/results.csv -depth "$DEPTH" -c 2 -exit-on-inactivity 3m)
+          if [ "$INCLUDE_EMAILS" = true ]; then args+=(-email); fi
+          timeout 20m ./google-maps-scraper "${args[@]}"
+          python3 - <<'PY'
+          import csv
+          with open('out/results.csv', newline='', encoding='utf-8-sig') as f:
+              rows = list(csv.DictReader(f))
+          if not rows:
+              raise SystemExit('No Maps results. Use official-site research fallback.')
+          print(f'Collected {len(rows)} candidate listings. Official-site verification required.')
+          PY
+      - name: Publish research artifacts
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: google-maps-prospects
-          path: out/results.csv
-          if-no-files-found: error
+          name: worldwide-${{ matrix.project }}-${{ github.run_id }}
+          path: out/
+          if-no-files-found: warn
           retention-days: 14
