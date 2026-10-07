@@ -4,14 +4,15 @@ import json
 from pathlib import Path
 
 REGIONS = {
-    "north-america": ["New York USA", "Toronto Canada", "Mexico City Mexico", "Kingston Jamaica"],
+    "north-america": ["New York USA", "Toronto Canada", "Mexico City Mexico", "Kingston Jamaica", "Portland Oregon USA", "Vancouver Washington USA", "Boise Idaho USA", "Austin Texas USA", "Pensacola Florida USA"],
     "south-america": ["Sao Paulo Brazil", "Buenos Aires Argentina", "Bogota Colombia", "Santiago Chile"],
-    "europe": ["London UK", "Dublin Ireland", "Berlin Germany", "Paris France", "Madrid Spain", "Amsterdam Netherlands", "Stockholm Sweden"],
+    "europe": ["London UK", "Dublin Ireland", "Berlin Germany", "Paris France", "Madrid Spain", "Amsterdam Netherlands", "Stockholm Sweden", "Manchester UK"],
     "africa": ["Cape Town South Africa", "Nairobi Kenya", "Lagos Nigeria", "Accra Ghana", "Cairo Egypt"],
     "asia": ["Singapore", "Dubai UAE", "Mumbai India", "Kuala Lumpur Malaysia", "Tokyo Japan", "Manila Philippines", "Jakarta Indonesia"],
-    "oceania": ["Auckland New Zealand", "Sydney Australia", "Suva Fiji"],
+    "oceania": ["Auckland New Zealand", "Sydney Australia", "Suva Fiji", "Melbourne Australia"],
 }
 CATEGORIES = {
+    "learn": ["independent branding studio", "boutique web design agency", "creative production studio"],
     "prime24ai": ["commercial cleaning", "property management", "bookkeeping"],
     "agents": ["commercial HVAC contractor", "plumbing contractor", "air conditioning service"],
     "mediamatch": ["craft chocolate maker", "specialty food producer", "independent skincare brand"],
