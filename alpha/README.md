@@ -6,10 +6,11 @@ search locations, with multiple centers in each state. Select **nationwide** in
 Actions > Google Maps nationwide and worldwide scraper.
 
 Each run is bounded to 30 queries per project by default (up to 50). To cover
-all categories and locations, rerun with query offsets 0, 50, and 100. Start
-with depth 1 and concurrency 2. The workflow saves the query list and CSV as
-artifacts. Google may limit results or block requests; failed runs remain
-visible. Do not treat scraped contacts as verified delivery addresses.
+all categories and locations, run batches with offsets 0, 50, 100, 150, 200,
+250, and 300. Start with depth 1 and concurrency 2. The workflow saves the
+query list and CSV as artifacts. Google may limit results or block requests;
+failed runs remain visible. Do not treat scraped contacts as verified delivery
+addresses.
 
 The original regional and worldwide modes remain available. The worldwide
 catalog covers six continents and 37 cities/countries. English queries are a
