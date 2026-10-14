@@ -1,4 +1,4 @@
-name: Google Maps worldwide native scraper
+name: Google Maps nationwide and worldwide scraper
 
 on:
   push:
@@ -8,16 +8,16 @@ on:
   workflow_dispatch:
     inputs:
       region:
-        description: Region or worldwide
+        description: Nationwide US or a worldwide region
         type: choice
-        options: [worldwide, north-america, south-america, europe, africa, asia, oceania]
-        default: worldwide
+        options: [nationwide, worldwide, north-america, south-america, europe, africa, asia, oceania]
+        default: nationwide
       offset:
-        description: Query offset for the next batch
+        description: Query offset for the next bounded batch
         default: '0'
       query_limit:
-        description: Queries per project (1 to 30)
-        default: '6'
+        description: Queries per project (1 to 50)
+        default: '30'
       depth:
         description: Result depth (1 to 3)
         default: '1'
@@ -29,7 +29,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: worldwide-prospects
+  group: prospect-scrape
   cancel-in-progress: false
 
 jobs:
@@ -53,12 +53,12 @@ jobs:
         run: |
           playwright_version=$(go list -m -f '{{.Version}}' github.com/mxschmitt/playwright-go)
           go run "github.com/mxschmitt/playwright-go/cmd/playwright@$playwright_version" install --with-deps chromium
-      - name: Create bounded worldwide query batch
+      - name: Create bounded query batch
         env:
           PROJECT: ${{ matrix.project }}
-          REGION: ${{ inputs.region || 'worldwide' }}
+          REGION: ${{ inputs.region || 'nationwide' }}
           OFFSET: ${{ inputs.offset || '0' }}
-          QUERY_LIMIT: ${{ inputs.query_limit || '6' }}
+          QUERY_LIMIT: ${{ inputs.query_limit || '30' }}
         run: |
           mkdir -p out
           python3 alpha/worldwide.py --project "$PROJECT" --region "$REGION" --offset "$OFFSET" --limit "$QUERY_LIMIT" --output out/queries.txt
@@ -83,7 +83,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: worldwide-${{ matrix.project }}-${{ github.run_id }}
+          name: prospects-${{ inputs.region || 'nationwide' }}-${{ matrix.project }}-${{ github.run_id }}
           path: out/
           if-no-files-found: warn
           retention-days: 14
